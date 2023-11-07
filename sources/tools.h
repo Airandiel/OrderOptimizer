@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-std::string trimString(const std::string& str) {
+inline std::string trimString(const std::string& str) {
     // Trim string from front and back erasing whitespaces and quotation marks
     std::string result = str;
 
@@ -17,5 +17,15 @@ std::string trimString(const std::string& str) {
         result.pop_back();
     }
 
+    return result;
+}
+
+inline std::string trimFrontOfString(const std::string& str,
+                                     const char trim_char) {
+    std::string result = str;
+    while (!result.empty() &&
+           (std::isspace(result.front()) || result.front() == trim_char)) {
+        result.erase(result.begin());
+    }
     return result;
 }

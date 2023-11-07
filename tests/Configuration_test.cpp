@@ -1,4 +1,4 @@
-#include "../sources/Configuration.h"
+#include "Configuration.h"
 
 #include <cassert>
 #include <fstream>
@@ -41,8 +41,10 @@ void testLoadConfigFromFile() {
     assert(config.products.size() > 0);
     assert(config.getProduct("Product 1").parts.size() == 1 &&
            "Get Product1 size failed!");
+    assert(config.getProduct("Product 1").id == 1 && "Get Product1 id failed!");
     assert(config.getProduct("Product 2").parts.size() == 2 &&
            "Get Product2 size failed!");
+    assert(config.getProduct("Product 2").id == 2 && "Get Product2 id failed!");
 
     // Product1 tests
     assert(config.getProduct("Product 1").parts[0].name == "Part A" &&
