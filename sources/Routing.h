@@ -52,7 +52,8 @@ inline int findNearestNeighbor(const std::vector<Part>& parts,
 }
 
 inline std::vector<int> solveTSP(const std::vector<Part>& parts) {
-    // solve TSP using the nearest neighbor algorithm
+    // solve TSP using the nearest neighbor algorithm, doesn't find the shortest
+    // possible path, just the path to the nearest neighbour and next one, etc
     std::vector<bool> visited(parts.size(), false);
     std::vector<int> path;
     int current_part = 0;
@@ -93,7 +94,7 @@ inline void printShortestPath(std::vector<Part> parts,
 
 inline bool planOrder(const Order& order, const std::string description,
                       Configuration& config, AMRPosition& AMR_position) {
-    // find the shortest route for all parts for order
+    // find the shortest route for all parts for order and print the route
     std::vector<Part> parts;
     Part destination;
     destination.name = "Order destination";

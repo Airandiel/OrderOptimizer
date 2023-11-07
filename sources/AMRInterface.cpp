@@ -13,13 +13,12 @@ AMRInterface::AMRInterface(Configuration& config, std::string project_directory)
     current_position.yaw = 0;
 }
 
-void AMRInterface::publisher() {
+void AMRInterface::start() {
     MessageContent message;
     while (not_end) {
-        std::cout << "Publisher" << std::endl;
+        std::cout << "Enter command: ";
         std::string user_input;
         std::getline(std::cin, user_input);
-        // std::cout << "Publisher send" << std::endl;
         std::string lowered = "";
         for (char c : user_input) {
             lowered += std::tolower(c);
@@ -37,11 +36,9 @@ void AMRInterface::publisher() {
             std::istringstream iss(user_input);
             iss >> message.order_id;
 
-            // std::cin >> message.order_id;
             std::cout << "string description: ";
             std::getline(std::cin, message.description);
         } else if (lowered.find("quit") != std::string::npos) {
-            // std::lock_guard<std::mutex> lock(mtx);
             message.quit = true;
             not_end = false;
         } else {
@@ -49,57 +46,37 @@ void AMRInterface::publisher() {
             message.next_order = false;
             message.quit = false;
         }
-        std::lock_guard<std::mutex> lock(mtx);
-        messages.push(message);
-        cv.notify_one();
-
-        std::cout << "Publisher send" << std::endl;
-    }
-}
-
-void AMRInterface::listener() {
-    while (not_end) {
-        // std::cout << "Listener" << std::endl;
-        std::unique_lock<std::mutex> lock(mtx);
-        if (cv.wait_for(lock, std::chrono::seconds(2),
-                        [&] { return !messages.empty(); })) {
-            std::cout << "Listener received" << std::endl;
-            MessageContent message = messages.front();
-            messages.pop();
-            handleMessage(message);
-        }
+        handleMessage(message);
     }
 }
 
 void AMRInterface::handleMessage(const MessageContent message) {
-    std::cout << "handle message" << std::endl;
     if (message.quit) {
         std::cout << "quit" << std::endl;
         not_end = false;
     } else if (message.current_position) {
-        std::cout << "current_position" << std::endl;
         std::cout << "double x: " << current_position.x << std::endl;
         std::cout << "double y: " << current_position.y << std::endl;
         std::cout << "double yaw: " << current_position.yaw << std::endl;
     } else if (message.next_order) {
-        std::cout << "next_order" << std::endl;
-        // runNextOrder(message);
-        std::thread worker([=]() { runNextOrder(message); });
+        runNextOrder(message);
     } else {
-        std::cout << "Unknown message." << std::endl;
+        std::cerr << "Unknown message. You can enter - currentPostion, "
+                     "nextOrder or quit"
+                  << std::endl;
     }
 }
 
 void AMRInterface::runNextOrder(const MessageContent message) {
     try {
-        std::cout << "thread started";
         OrderSearcher orderSearcher;
 
         bool result = orderSearcher.startOrderSearchInDirectory(
             message.order_id, project_directory + "/orders/");
         if (!result) {
-            std::cout << "Problem with reading order from configuration"
-                      << std::endl;
+            std::cout << "Problem with reading order from configuration, order "
+                         "not found, order number: "
+                      << message.order_id << std::endl;
             return;
         }
 
@@ -112,24 +89,6 @@ void AMRInterface::runNextOrder(const MessageContent message) {
             return;
         }
     } catch (const std::exception& e) {
-        // Handle the exception, or log it for debugging
         std::cerr << "Exception in runNextOrder: " << e.what() << std::endl;
-    }
-}
-
-void AMRInterface::start() {
-    std::cout << "Start" << std::endl;
-    publisher_thread = std::thread(&AMRInterface::publisher, this);
-    listener_thread = std::thread(&AMRInterface::listener, this);
-}
-
-void AMRInterface::join() {
-    // not_end = false;
-    // cv.notify_all();
-    if (publisher_thread.joinable()) {
-        publisher_thread.join();
-    }
-    if (listener_thread.joinable()) {
-        listener_thread.join();
     }
 }

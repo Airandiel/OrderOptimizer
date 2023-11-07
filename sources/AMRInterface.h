@@ -22,22 +22,11 @@ class AMRInterface {
    public:
     AMRInterface(Configuration& config, std::string project_directory);
 
-    void publisher();
-
-    void listener();
+    void start();
 
     void handleMessage(const MessageContent message);
 
-    void start();
-
-    void join();
-
    private:
-    std::mutex mtx;
-    std::condition_variable cv;
-    std::queue<MessageContent> messages;
-    std::thread publisher_thread;
-    std::thread listener_thread;
     AMRPosition current_position;
     Configuration config;
     std::string project_directory;

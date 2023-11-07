@@ -30,10 +30,7 @@ const Product& Configuration::getProduct(
 
 bool Configuration::getProductOnIndex(Product& found_product,
                                       const unsigned index) {
-    std::cout << "Products size and index" << products.size() << " , " << index
-              << std::endl;
     if (index < products.size()) {
-        std::cout << "YAAAY product on index" << std::endl;
         found_product = products[index];
     } else {
         return false;
@@ -45,10 +42,10 @@ bool Configuration::getProductWithID(Product& found_product, const int id) {
     int index = id - 1;
     bool result = getProductOnIndex(found_product, index);
 
-    if (found_product.id == id) {
+    if (result && found_product.id == id) {
         return true;
     } else {
-        std::cout << "" << std::endl;
+        // if the orders are not in sequence search using binary search
         auto it = std::lower_bound(products.begin(), products.end(), id,
                                    [](const Product& product, int target_id) {
                                        return product.id < target_id;

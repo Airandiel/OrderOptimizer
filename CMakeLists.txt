@@ -10,7 +10,7 @@ add_executable(OrderOptimizer main.cpp ${SOURCES})
 find_package(Threads REQUIRED)
 target_link_libraries(OrderOptimizer stdc++fs Threads::Threads)
 
-add_executable(OrderOptimizerTests tests/Configuration_test.cpp ${SOURCES})
+add_executable(OrderOptimizerTests tests/tests.cpp ${SOURCES})
 target_link_libraries(OrderOptimizerTests stdc++fs Threads::Threads)
 target_compile_definitions(OrderOptimizerTests PRIVATE TEST_BUILD)
 
