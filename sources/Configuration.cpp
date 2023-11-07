@@ -1,5 +1,6 @@
 #include "Configuration.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -8,6 +9,10 @@
 
 #include "Product.h"
 #include "tools.h"
+
+bool compareProductsById(const Product& a, const Product& b) {
+    return a.id < b.id;
+}
 
 void Configuration::addProduct(const Product& product) {
     products.emplace_back(product);
@@ -20,6 +25,40 @@ const Product& Configuration::getProduct(const std::string& productName) const {
         }
     }
     throw std::runtime_error("Product not found");
+}
+
+bool Configuration::getProductOnIndex(Product& found_product, const int index) {
+    std::cout << "Products size and index" << products.size() << " , " << index
+              << std::endl;
+    if (index < products.size()) {
+        std::cout << "YAAAY product on index" << std::endl;
+        found_product = products[index];
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool Configuration::getProductWithID(Product& found_product, const int id) {
+    int index = id - 1;
+    bool result = getProductOnIndex(found_product, index);
+
+    if (found_product.id == id) {
+        return true;
+    } else {
+        std::cout << "" << std::endl;
+        auto it = std::lower_bound(products.begin(), products.end(), id,
+                                   [](const Product& product, int targetId) {
+                                       return product.id < targetId;
+                                   });
+        if (it != products.end() && it->id == id) {
+            found_product.id = it->id;
+            found_product.name = it->name;
+            found_product.parts = it->parts;
+            return true;
+        }
+    }
+    return false;
 }
 
 bool Configuration::loadConfigFromFile(const std::string& file_path) {
@@ -72,6 +111,7 @@ bool Configuration::loadConfigFromFile(const std::string& file_path) {
             std::istringstream iss3(
                 trimString(line.substr(line.find(find_cy) + find_cy.length())));
             iss3 >> part.cy;
+            part.product_id = product.id;
 
             product.parts.push_back(part);  // Push ready product
         }
@@ -79,6 +119,7 @@ bool Configuration::loadConfigFromFile(const std::string& file_path) {
 
     products.push_back(product);  // Add the last product
     this->products = products;
+    std::sort(products.begin(), products.end(), compareProductsById);
     file.close();
     return true;
 }

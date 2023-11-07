@@ -4,6 +4,7 @@
 
 struct Part {
     std::string name;
+    int product_id;
     double cx;
     double cy;
 };

@@ -1,4 +1,4 @@
-#pragma once
+#include "OrderSearcher.h"
 
 #include <filesystem>
 #include <fstream>
@@ -10,18 +10,15 @@
 
 #include "tools.h"
 
-struct Order {
-    int number;
-    double cx;
-    double cy;
-    std::vector<int> products;
-};
+std::mutex OrderSearcher::orderMutex;
+bool OrderSearcher::is_found;
+Order OrderSearcher::found_order;
 
-std::mutex orderMutex;
-Order found_order;
-bool is_found;
+OrderSearcher::OrderSearcher() {}
 
-bool getOrderDetails(std::ifstream& file, const int order_number) {
+OrderSearcher::~OrderSearcher() {}
+
+bool OrderSearcher::getOrderDetails(std::ifstream& file, int order_number) {
     std::lock_guard<std::mutex> lock(orderMutex);
     found_order.number = order_number;
     std::string line;
@@ -56,7 +53,8 @@ bool getOrderDetails(std::ifstream& file, const int order_number) {
     return true;
 }
 
-bool findOrderInFile(const std::string& file_path, const int order_id) {
+bool OrderSearcher::findOrderInFile(const std::string& file_path,
+                                    int order_id) {
     std::string order_id_string = std::to_string(order_id);
     std::ifstream file(file_path);
     if (!file.is_open()) {
@@ -81,7 +79,8 @@ bool findOrderInFile(const std::string& file_path, const int order_id) {
     return result;
 }
 
-void processFile(const std::string& file_path, const int order_number) {
+void OrderSearcher::processFile(const std::string& file_path,
+                                int order_number) {
     if (findOrderInFile(file_path, order_number)) {
         std::lock_guard<std::mutex> lock(orderMutex);
         is_found = true;
@@ -89,11 +88,11 @@ void processFile(const std::string& file_path, const int order_number) {
     }
 }
 
-bool startOrderSearchInDirectory(Order& order, const int order_number,
-                                 const std::string& folder_path) {
+bool OrderSearcher::startOrderSearchInDirectory(
     // function iterates over all files in orders directory, starts new thread
     // for search in each file and waits till all threads will finish, returns
     // true if the order was found
+    int order_number, const std::string& folder_path) {
     std::vector<std::thread> threads;
     is_found = false;
     for (const auto& entry : std::filesystem::directory_iterator(folder_path)) {
@@ -105,6 +104,7 @@ bool startOrderSearchInDirectory(Order& order, const int order_number,
     for (auto& thread : threads) {
         thread.join();
     }
-    order = found_order;
     return is_found;
 }
+
+const Order& OrderSearcher::getFoundOrder() const { return found_order; }
