@@ -10,9 +10,9 @@ class Configuration {
 
     void addProduct(const Product& product);
 
-    const Product& getProduct(const std::string& productName) const;
+    const Product& getProduct(const std::string& product_name) const;
 
     bool loadConfigFromFile(const std::string& file_path);
-    bool getProductOnIndex(Product& found_product, const int index);
+    bool getProductOnIndex(Product& found_product, const unsigned index);
     bool getProductWithID(Product& found_product, const int id);
 };

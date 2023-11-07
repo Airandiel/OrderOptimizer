@@ -18,16 +18,18 @@ void Configuration::addProduct(const Product& product) {
     products.emplace_back(product);
 }
 
-const Product& Configuration::getProduct(const std::string& productName) const {
+const Product& Configuration::getProduct(
+    const std::string& product_name) const {
     for (const Product& product : products) {
-        if (product.name == productName) {
+        if (product.name == product_name) {
             return product;
         }
     }
     throw std::runtime_error("Product not found");
 }
 
-bool Configuration::getProductOnIndex(Product& found_product, const int index) {
+bool Configuration::getProductOnIndex(Product& found_product,
+                                      const unsigned index) {
     std::cout << "Products size and index" << products.size() << " , " << index
               << std::endl;
     if (index < products.size()) {
@@ -48,8 +50,8 @@ bool Configuration::getProductWithID(Product& found_product, const int id) {
     } else {
         std::cout << "" << std::endl;
         auto it = std::lower_bound(products.begin(), products.end(), id,
-                                   [](const Product& product, int targetId) {
-                                       return product.id < targetId;
+                                   [](const Product& product, int target_id) {
+                                       return product.id < target_id;
                                    });
         if (it != products.end() && it->id == id) {
             found_product.id = it->id;

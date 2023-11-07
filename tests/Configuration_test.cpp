@@ -8,7 +8,7 @@ void testLoadConfigFromFile() {
     std::cout << "Testing load config from file: ";
     Configuration config;
 
-    const std::string yamlData =
+    const std::string yaml_data =
         "- id: 1\n"
         "  product: \"Product 1\"\n"
         "  parts:\n"
@@ -26,13 +26,13 @@ void testLoadConfigFromFile() {
         "    cy: 655.423\n";
 
     // create temp file
-    const std::string tempFile = "test_config.yaml";
-    std::ofstream file(tempFile);
-    file << yamlData;
+    const std::string temp_file = "test_config.yaml";
+    std::ofstream file(temp_file);
+    file << yaml_data;
     file.close();
 
     // use temporary file, because otherwise the path from executable changes
-    bool result = config.loadConfigFromFile(tempFile);
+    bool result = config.loadConfigFromFile(temp_file);
 
     // Check if file was loaded succesfully
     assert(result && "File load failed!");

@@ -1,3 +1,4 @@
+#pragma once
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -7,8 +8,8 @@
 #include "OrderSearcher.h"
 #include "Product.h"
 
-bool getPartsPositions(Order order, std::vector<Part>& parts,
-                       Configuration& config) {
+inline bool getPartsPositions(Order order, std::vector<Part>& parts,
+                              Configuration& config) {
     // get all parts from config for order
     for (int product_id : order.products) {
         Product new_product;
@@ -26,82 +27,107 @@ bool getPartsPositions(Order order, std::vector<Part>& parts,
     return true;
 }
 
-double calculateDistance(const Part& part1, const Part& part2) {
+inline double calculateDistance(const Part& part1, const Part& part2) {
     double dx = part1.cx - part2.cx;
     double dy = part1.cy - part2.cy;
     return std::sqrt(dx * dx + dy * dy);
 }
 
-int findNearestNeighbor(const std::vector<Part>& parts,
-                        std::vector<bool>& visited, int currentPart) {
-    int nearestNeighbor = -1;
-    double minDistance = std::numeric_limits<double>::max();
+inline int findNearestNeighbor(const std::vector<Part>& parts,
+                               std::vector<bool>& visited, int current_part) {
+    int nearest_neighbor = -1;
+    double min_distance = std::numeric_limits<double>::max();
 
-    for (int i = 0; i < parts.size(); ++i) {
-        if (!visited[i] && i != currentPart) {
-            double distance = calculateDistance(parts[currentPart], parts[i]);
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearestNeighbor = i;
+    for (int i = 0; i < (int)parts.size(); i++) {
+        if (!visited[i] && i != current_part) {
+            double distance = calculateDistance(parts[current_part], parts[i]);
+            if (distance < min_distance) {
+                min_distance = distance;
+                nearest_neighbor = i;
             }
         }
     }
 
-    return nearestNeighbor;
+    return nearest_neighbor;
 }
 
-std::vector<int> solveTSP(const std::vector<Part>& parts) {
+inline std::vector<int> solveTSP(const std::vector<Part>& parts) {
     // solve TSP using the nearest neighbor algorithm
     std::vector<bool> visited(parts.size(), false);
     std::vector<int> path;
-    int currentPart = 0;
-    visited[currentPart] = true;
-    path.push_back(currentPart);
+    int current_part = 0;
+    visited[current_part] = true;
+    path.push_back(current_part);
 
     while (path.size() < parts.size()) {
-        int nearestNeighbor = findNearestNeighbor(parts, visited, currentPart);
-        if (nearestNeighbor != -1) {
-            visited[nearestNeighbor] = true;
-            path.push_back(nearestNeighbor);
-            currentPart = nearestNeighbor;
+        int nearest_neighbor =
+            findNearestNeighbor(parts, visited, current_part);
+        if (nearest_neighbor != -1) {
+            visited[nearest_neighbor] = true;
+            path.push_back(nearest_neighbor);
+            current_part = nearest_neighbor;
         }
     }
 
     return path;
 }
 
-bool planTheOrder(const Order& order, const std::string description,
-                  Configuration& config) {
+inline void printShortestPath(std::vector<Part> parts,
+                              AMRPosition& AMR_position,
+                              std::vector<int> shortest_path) {
+    std::cout << "1.\tAMR starts from x: " << AMR_position.x
+              << ", y: " << AMR_position.y << ", yaw: " << AMR_position.yaw
+              << std::endl;
+    for (unsigned i = 1; i < shortest_path.size(); i++) {
+        Part current_part = parts[shortest_path[i]];
+        std::cout << i + 1 << ".\t Fetching part \'" << current_part.name
+                  << "\' for product \'" << current_part.product_id
+                  << "\' at x: " << current_part.cx
+                  << ", y: " << current_part.cy << std::endl;
+    }
+    Part current_part = parts[parts.size() - 1];
+    std::cout << parts.size() + 1
+              << ".\t Delivering to destination x: " << current_part.cx
+              << ", y: " << current_part.cy << std::endl;
+}
+
+inline bool planOrder(const Order& order, const std::string description,
+                      Configuration& config, AMRPosition& AMR_position) {
     // find the shortest route for all parts for order
     std::vector<Part> parts;
     Part destination;
     destination.name = "Order destination";
     destination.cx = order.cx;
     destination.cy = order.cy;
-    parts.push_back(destination);
+    Part start;
+    start.name = "AMR position";
+    start.cx = AMR_position.x;
+    start.cy = AMR_position.y;
+    AMRPosition start_position = AMR_position;
+    parts.push_back(start);
     bool result = getPartsPositions(order, parts, config);
     if (result) {
         std::cout << "Order acquired" << std::endl;
+        std::cout << "Working on order " << order.number << " " << description
+                  << std::endl;
+        std::vector<int> shortest_path;
+        shortest_path = solveTSP(parts);
+
+        AMR_position.x = order.cx;
+        AMR_position.y = order.cy;
+        // calculate yaw in degrees
+        AMR_position.yaw =
+            std::atan2(AMR_position.y - parts[parts.size() - 1].cy,
+                       AMR_position.x - parts[parts.size() - 1].cx) *
+            180 / M_PI;
+
+        parts.push_back(destination);
+        printShortestPath(parts, start_position, shortest_path);
+
     } else {
         std::cout << "Order products not found" << std::endl;
         return false;
     }
 
-    std::cout << "Working on order " << order.number << " " << description
-              << std::endl;
-    std::vector<int> shortest_path;
-    shortest_path = solveTSP(parts);
-    int index = 1;
-    for (int i = shortest_path.size() - 1; i > 0; i--) {
-        Part current_part = parts[shortest_path[i]];
-        std::cout << index << ".\t Fetching part \'" << current_part.name
-                  << "\' for product \'" << current_part.product_id
-                  << "\' at x: " << current_part.cx
-                  << ", y: " << current_part.cy << std::endl;
-        index++;
-    }
-    Part current_part = parts[shortest_path[0]];
-    std::cout << index << ".\t Delivering to destination x: " << current_part.cx
-              << ", y: " << current_part.cy << std::endl;
     return true;
 }

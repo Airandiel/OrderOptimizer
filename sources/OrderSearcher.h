@@ -32,7 +32,7 @@ class OrderSearcher {
 
     void processFile(const std::string& file_path, int order_number);
 
-    static std::mutex orderMutex;
+    static std::mutex order_mutex;
     static bool is_found;
     static Order found_order;
 };

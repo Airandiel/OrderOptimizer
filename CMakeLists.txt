@@ -2,24 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(OrderOptimizer)
 
 set(CMAKE_CXX_STANDARD 17)
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lstdc++fs")
-
-# set(SOURCES
-# sources/Configuration.h
-# sources/Configuration.cpp
-# sources/Product.h
-# sources/Order.h
-# sources/Order.cpp
-# sources/tools.h
-# )
-# add_executable(OrderOptimizer main.cpp ${SOURCES})
-# find_package(Threads REQUIRED)
-# target_link_libraries(OrderOptimizer stdc++fs Threads::Threads)
-
-# add_executable(OrderOptimizerTests tests/Configuration_test.cpp ${SOURCES})
-# target_compile_definitions(OrderOptimizerTests PRIVATE TEST_BUILD)
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wextra -pedantic -O0 -UNDEBUG")
 
 file(GLOB SOURCES "sources/*.cpp")
 

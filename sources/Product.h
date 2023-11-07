@@ -14,3 +14,9 @@ struct Product {
     std::string name;
     std::vector<Part> parts;
 };
+
+struct AMRPosition {
+    double x;
+    double y;
+    double yaw;
+};

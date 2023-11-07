@@ -10,7 +10,7 @@
 
 #include "tools.h"
 
-std::mutex OrderSearcher::orderMutex;
+std::mutex OrderSearcher::order_mutex;
 bool OrderSearcher::is_found;
 Order OrderSearcher::found_order;
 
@@ -19,7 +19,7 @@ OrderSearcher::OrderSearcher() {}
 OrderSearcher::~OrderSearcher() {}
 
 bool OrderSearcher::getOrderDetails(std::ifstream& file, int order_number) {
-    std::lock_guard<std::mutex> lock(orderMutex);
+    std::lock_guard<std::mutex> lock(order_mutex);
     found_order.number = order_number;
     std::string line;
     std::string find_cx = "cx: ";
@@ -66,7 +66,7 @@ bool OrderSearcher::findOrderInFile(const std::string& file_path,
     bool result = false;
     std::string find_order = "order: ";
     while (std::getline(file, line)) {
-        if (line[0] = '-') {
+        if (line[0] == '-') {
             if (line.find(find_order) != std::string::npos) {
                 std::string id_string =
                     line.substr(line.find(find_order) + find_order.length());
@@ -82,7 +82,7 @@ bool OrderSearcher::findOrderInFile(const std::string& file_path,
 void OrderSearcher::processFile(const std::string& file_path,
                                 int order_number) {
     if (findOrderInFile(file_path, order_number)) {
-        std::lock_guard<std::mutex> lock(orderMutex);
+        std::lock_guard<std::mutex> lock(order_mutex);
         is_found = true;
         std::cout << "Found order in file: " << file_path << std::endl;
     }
@@ -97,8 +97,15 @@ bool OrderSearcher::startOrderSearchInDirectory(
     is_found = false;
     for (const auto& entry : std::filesystem::directory_iterator(folder_path)) {
         const std::string& file_name = entry.path().filename().string();
-        std::thread worker(
-            [=]() { processFile(folder_path + file_name, order_number); });
+        std::thread worker([=]() {
+            try {
+                processFile(folder_path + file_name, order_number);
+            } catch (const std::exception& e) {
+                // Handle the exception, or log it for debugging
+                std::cerr << "Exception in runNextOrder: " << e.what()
+                          << std::endl;
+            }
+        });
         threads.push_back(std::move(worker));
     }
     for (auto& thread : threads) {
